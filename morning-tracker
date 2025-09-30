@@ -206,15 +206,15 @@
                         scaled: completedActivities.length / Object.keys(activities).length
                     },
                     extensions: {
-                        "http://patriciastitson.com/extensions/wake-time": document.getElementById('wake-time').value,
-                        "http://patriciastitson.com/extensions/sleep": parseInt(document.getElementById('sleep').value),
-                        "http://patriciastitson.com/extensions/mood": parseInt(document.getElementById('mood').value),
-                        "http://patriciastitson.com/extensions/pain": parseInt(document.getElementById('pain').value),
-                        "http://patriciastitson.com/extensions/anxiety": parseInt(document.getElementById('anxiety').value),
-                        "http://patriciastitson.com/extensions/activities": completedActivities,
-                        "http://patriciastitson.com/extensions/goals": document.getElementById('daily-goal').value,
-                        "http://patriciastitson.com/extensions/reflections": document.getElementById('reflections').value,
-                        "http://patriciastitson.com/extensions/wake-mode": document.getElementById('wake-mode').value
+                        "http://yourdomain.com/extensions/wake-time": document.getElementById('wake-time').value,
+                        "http://yourdomain.com/extensions/sleep": parseInt(document.getElementById('sleep').value),
+                        "http://yourdomain.com/extensions/mood": parseInt(document.getElementById('mood').value),
+                        "http://yourdomain.com/extensions/pain": parseInt(document.getElementById('pain').value),
+                        "http://yourdomain.com/extensions/anxiety": parseInt(document.getElementById('anxiety').value),
+                        "http://yourdomain.com/extensions/activities": completedActivities,
+                        "http://yourdomain.com/extensions/goals": document.getElementById('daily-goal').value,
+                        "http://yourdomain.com/extensions/reflections": document.getElementById('reflections').value,
+                        "http://yourdomain.com/extensions/wake-mode": document.getElementById('wake-mode').value
                     }
                 },
                 timestamp: buildTimestampFromInputs()
