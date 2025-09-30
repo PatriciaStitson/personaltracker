@@ -1,0 +1,515 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Tracker - Last 20 Days</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1e3a5f 0%, #2d1b4e 100%); min-height:100vh; padding:20px; }
+    .container { max-width: 1100px; margin: 0 auto; background: rgba(255,255,255,.97); border-radius:20px; box-shadow: 0 20px 60px rgba(0,0,0,.3); padding:30px; }
+    .header { text-align:center; margin-bottom: 24px; }
+    .header h1 { color:#2d1b4e; font-size: 2.2rem; margin-bottom: 8px; }
+    .header p { color:#555; font-size: 1.1rem; }
+
+    /* Day grouping */
+    .day-group { margin-bottom: 30px; background: #f8f9fa; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+    .day-header { text-align: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0; }
+    .day-title { font-size: 1.4rem; font-weight: 800; color: #2d1b4e; margin-bottom: 4px; }
+    .days-ago { display: inline-block; background: #e0e7ff; color: #4338ca; padding: 4px 12px; border-radius: 999px; font-size: .9rem; font-weight: 600; }
+
+    /* Cards container - side by side */
+    .cards-container { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 900px) {
+      .cards-container { grid-template-columns: 1fr; }
+    }
+
+    /* Individual entry cards */
+    .entry-card { background:#fff; border-radius:14px; padding:16px; border:2px solid transparent; box-shadow:0 4px 12px rgba(0,0,0,.06); position:relative; overflow:hidden; }
+    .entry-card.morning { border-top: 4px solid #f59e0b; }
+    .entry-card.evening { border-top: 4px solid #6366f1; }
+    .entry-card.missing { border: 2px dashed #d1d5db; background: #f9fafb; opacity: 0.6; }
+
+    .card-type { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 1rem; margin-bottom: 12px; padding: 6px 12px; border-radius: 8px; }
+    .card-type.morning { background: #fef3c7; color: #92400e; }
+    .card-type.evening { background: #eef2ff; color: #3730a3; }
+
+    .time-badge { display: inline-block; background: rgba(0,0,0,.06); color: #333; padding: 4px 10px; border-radius: 999px; font-size: .85rem; margin-left: 8px; }
+
+    .metrics { display: grid; grid-template-columns: repeat(4,1fr); gap:8px; margin-bottom:12px; }
+    .metric { background:#f8f9fa; border-radius:10px; padding:8px; text-align:center; }
+    .metric-label { font-size:.75rem; color:#666; text-transform:uppercase; font-weight: 600; }
+    .metric-value { font-size:1.3rem; font-weight:800; color:#2d1b4e; }
+
+    .mode-badge { background:rgba(99,102,241,.1); border-left:3px solid #6366f1; border-radius:8px; padding:8px 10px; margin-bottom:10px; }
+    .mode-badge h4 { font-size:.9rem; margin-bottom:4px; color:#4338ca; }
+    .mode-value { font-size:.9rem; color:#333; font-weight:600; text-transform:capitalize; }
+
+    .activities { margin-top:8px; }
+    .activities .section-title { display:flex; align-items:center; justify-content:space-between; font-weight:700; color:#333; margin-bottom:8px; font-size: .9rem; }
+    .completion-summary { background:#10b981; color:#fff; padding:3px 8px; border-radius:999px; font-size:.75rem; }
+    .activities-grid { display:grid; grid-template-columns: repeat(4,1fr); gap:6px; }
+    .activity-item { border:2px solid #e0e0e0; border-radius:10px; padding:8px 4px; text-align:center; font-size: .7rem; }
+    .activity-item.completed { background:#10b981; color:#fff; border-color:#10b981; }
+    .activity-icon { font-size:1.1rem; }
+    .activity-name { font-weight:600; margin-top: 2px; }
+
+    .text-entry { background:rgba(99,102,241,.05); border-left:3px solid #6366f1; border-radius:8px; padding:8px 10px; margin-top:8px; }
+    .text-entry h4 { font-size:.85rem; margin-bottom:4px; color:#4338ca; font-weight: 700; }
+    .text-content { font-size:.85rem; color:#333; line-height:1.4; }
+
+    .missing-text { text-align: center; color: #9ca3af; padding: 20px; font-style: italic; }
+
+    .loading, .no-data { text-align:center; color:#666; padding:40px; }
+    .no-data { background:rgba(239,68,68,.05); border-radius:12px; border:2px dashed rgba(239,68,68,.3); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🌅🌙 Daily Wellness Tracker</h1>
+      <p>Morning & Evening Routines • Last 20 Days</p>
+    </div>
+
+    <div id="entries-container"></div>
+  </div>
+
+  <script>
+    const correctPassword = "[Choose a password]";
+    const userPassword = prompt("🔐 Enter password to access tracker:");
+    if (userPassword !== correctPassword) {
+      document.body.innerHTML = `
+        <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+          <h1 style="color: #dc2626;">🚫 Access Denied</h1>
+          <p style="color: #666;">Invalid password. Please contact the administrator.</p>
+        </div>`;
+      throw new Error("Unauthorized access");
+    }
+
+    function dateKeyLocal(d){ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), da=String(d.getDate()).padStart(2,'0'); return `${y}-${m}-${da}`; }
+    function fromDateKeyLocal(key){ const [y,m,d]=key.split('-').map(Number); return new Date(y,m-1,d); }
+    function atMidnightLocal(d){ const x = new Date(d); x.setHours(0,0,0,0); return x; }
+
+    let combinedData = {};
+
+    window.addEventListener('DOMContentLoaded', () => { showLoading(); loadAllTrackerData(); });
+
+    function showLoading(){
+      const c = document.getElementById('entries-container');
+      c.innerHTML = `<div class="loading"><h3>Loading your tracker data...</h3><p>Fetching from [your LRS] LRS...</p></div>`;
+    }
+
+    async function fetchStatementsByActivity(activityId){
+      const base = '[endpoint]';
+      const auth = 'Basic ' + btoa('username: password');
+      let url = `${base}?activity=${activityId}&limit=50`;
+      const all = [];
+      
+      try {
+        for (let i=0; i<5; i++){
+          console.log(`Fetching ${activityId}:`, url);
+          const res = await fetch(url, { 
+            headers: { 
+              'Authorization': auth, 
+              'X-Experience-API-Version': '1.0.3', 
+              'Content-Type': 'application/json' 
+            } 
+          });
+          
+          if (!res.ok) { 
+            console.error('LRS error', res.status, await res.text()); 
+            break; 
+          }
+          
+          const data = await res.json();
+          if (Array.isArray(data.statements)) {
+            all.push(...data.statements);
+          }
+          
+          if (!data.more) break;
+          url = base + data.more;
+        }
+      } catch (err) {
+        console.error('Network error fetching from LRS', err);
+        return null;
+      }
+      
+      return all;
+    }
+
+    async function loadAllTrackerData(){
+      try {
+        const [morningStatements, eveningStatements] = await Promise.all([
+          fetchStatementsByActivity('http://yourdomain.com/activities/morning-routine'),
+          fetchStatementsByActivity('http://yourdomain.com/activities/evening-routine')
+        ]);
+        
+        console.log('Morning statements:', morningStatements?.length);
+        console.log('Evening statements:', eveningStatements?.length);
+        
+        if (morningStatements || eveningStatements){
+          combinedData = parseAndCombineStatements(morningStatements, eveningStatements);
+          console.log('Combined data:', combinedData);
+          displayCombinedEntries();
+        } else {
+          showNoData();
+        }
+      } catch (e){ 
+        console.error('Error loading xAPI data', e); 
+        showNoData(); 
+      }
+    }
+
+    function parseAndCombineStatements(morningStatements, eveningStatements){
+      const cutoff = atMidnightLocal(new Date());
+      cutoff.setDate(cutoff.getDate() - 20);
+      
+      const dataByDate = new Map();
+      
+      // Parse morning statements
+      if (morningStatements){
+        for (const st of morningStatements){
+          if (!st.timestamp) continue;
+          const ts = new Date(st.timestamp);
+          const localMidnight = atMidnightLocal(ts);
+          if (localMidnight < cutoff) continue;
+
+          const dateKey = dateKeyLocal(ts);
+          
+          if (!dataByDate.has(dateKey)){
+            dataByDate.set(dateKey, { date: dateKey, morning: null, evening: null });
+          }
+          
+          const dayData = dataByDate.get(dateKey);
+          if (!dayData.morning || ts > dayData.morning.timestamp){
+            dayData.morning = parseMorningStatement(st, ts);
+          }
+        }
+      }
+      
+      // Parse evening statements
+      if (eveningStatements){
+        for (const st of eveningStatements){
+          if (!st.timestamp) continue;
+          const ts = new Date(st.timestamp);
+          const localMidnight = atMidnightLocal(ts);
+          if (localMidnight < cutoff) continue;
+
+          const dateKey = dateKeyLocal(ts);
+          
+          if (!dataByDate.has(dateKey)){
+            dataByDate.set(dateKey, { date: dateKey, morning: null, evening: null });
+          }
+          
+          const dayData = dataByDate.get(dateKey);
+          if (!dayData.evening || ts > dayData.evening.timestamp){
+            dayData.evening = parseEveningStatement(st, ts);
+          }
+        }
+      }
+      
+      return dataByDate;
+    }
+
+    function parseMorningStatement(st, ts){
+      const entry = {
+        timestamp: ts,
+        wakeTime: null,
+        sleep: null,
+        mood: null,
+        pain: null,
+        anxiety: null,
+        wakeMode: null,
+        activities: {},
+        dailyGoal: '',
+        reflections: ''
+      };
+      
+      if (st.result?.extensions){
+        const ext = st.result.extensions;
+        entry.wakeTime = ext['http://yourdomain.com/extensions/wake-time'] || null;
+        entry.sleep = ext['http://yourdomain.com/extensions/sleep'] || null;
+        entry.mood = ext['http://yourdomain.com/extensions/mood'] || null;
+        entry.pain = ext['http://yourdomain.com/extensions/pain'] || null;
+        entry.anxiety = ext['http://yourdomain.com/extensions/anxiety'] || null;
+        entry.wakeMode = ext['http://yourdomain.com/extensions/wake-mode'] || null;
+        entry.dailyGoal = ext['http://yourdomain.com/extensions/goals'] || '';
+        entry.reflections = ext['http://yourdomain.com/extensions/reflections'] || '';
+        
+        const actArr = ext['http://yourdomain.com/extensions/activities'];
+        if (Array.isArray(actArr)){
+          actArr.forEach(a => entry.activities[a] = true);
+        }
+      }
+      
+      return entry;
+    }
+
+    function parseEveningStatement(st, ts){
+      const entry = {
+        timestamp: ts,
+        bedTime: null,
+        energy: null,
+        mood: null,
+        productivity: null,
+        stress: null,
+        bedMode: null,
+        activities: {},
+        dailyWin: '',
+        gratitude: '',
+        reflections: '',
+        tomorrowPriority: ''
+      };
+      
+      if (st.result?.extensions){
+        const ext = st.result.extensions;
+        entry.bedTime = ext['http://yourdomain.com/extensions/bed-time'] || null;
+        entry.energy = ext['http://yourdomain.com/extensions/energy'] || null;
+        entry.mood = ext['http://yourdomain.com/extensions/mood'] || null;
+        entry.productivity = ext['http://yourdomain.com/extensions/productivity'] || null;
+        entry.stress = ext['http://yourdomain.com/extensions/stress'] || null;
+        entry.bedMode = ext['http://yourdomain.com/extensions/bed-mode'] || null;
+        entry.dailyWin = ext['http://yourdomain.com/extensions/daily-win'] || '';
+        entry.gratitude = ext['http://yourdomain.com/extensions/gratitude'] || '';
+        entry.reflections = ext['http://yourdomain.com/extensions/reflections'] || '';
+        entry.tomorrowPriority = ext['http://yourdomain.com/extensions/tomorrow-priority'] || '';
+        
+        const actArr = ext['http://patriciastitson.com/extensions/activities'];
+        if (Array.isArray(actArr)){
+          actArr.forEach(a => entry.activities[a] = true);
+        }
+      }
+      
+      return entry;
+    }
+
+    function displayCombinedEntries(){
+      const container = document.getElementById('entries-container');
+      if (combinedData.size === 0){ showNoData(); return; }
+
+      const today = atMidnightLocal(new Date());
+      const sortedDates = Array.from(combinedData.keys()).sort((a,b) => b.localeCompare(a));
+      
+      const html = sortedDates.map(dateKey => {
+        const dayData = combinedData.get(dateKey);
+        const entryDate = fromDateKeyLocal(dateKey);
+        const daysAgo = Math.floor((today - atMidnightLocal(entryDate)) / (1000*60*60*24));
+        const daysAgoTxt = daysAgo === 0 ? 'Today' : `${daysAgo} day${daysAgo===1?'':'s'} ago`;
+        const dateLabel = entryDate.toLocaleDateString('en-US', { 
+          weekday: 'long', 
+          month: 'long', 
+          day: 'numeric', 
+          year: 'numeric' 
+        });
+
+        return `
+          <div class="day-group">
+            <div class="day-header">
+              <div class="day-title">${dateLabel}</div>
+              <div class="days-ago">${daysAgoTxt}</div>
+            </div>
+            <div class="cards-container">
+              ${renderMorningCard(dayData.morning)}
+              ${renderEveningCard(dayData.evening)}
+            </div>
+          </div>`;
+      }).join('');
+
+      container.innerHTML = html;
+    }
+
+    function renderMorningCard(data){
+      if (!data){
+        return `
+          <div class="entry-card morning missing">
+            <div class="card-type morning">🌅 Morning</div>
+            <div class="missing-text">No morning entry logged</div>
+          </div>`;
+      }
+
+      const morningActivities = [
+        { key: 'meditation', name: 'Meditation', icon: '🧘‍♀️' },
+        { key: 'exercise', name: 'Exercise', icon: '💪' },
+        { key: 'journaling', name: 'Journaling', icon: '📝' },
+        { key: 'reading', name: 'Reading', icon: '📚' },
+        { key: 'breakfast', name: 'Breakfast', icon: '🥗' },
+        { key: 'hydration', name: 'Hydration', icon: '💧' },
+        { key: 'planning', name: 'Planning', icon: '📋' },
+        { key: 'vitamins', name: 'Vitamins', icon: '💊' }
+      ];
+
+      const completedCount = morningActivities.filter(a => data.activities[a.key]).length;
+      const activitiesHtml = morningActivities.map(a => `
+        <div class="activity-item ${data.activities[a.key] ? 'completed' : ''}">
+          <div class="activity-icon">${a.icon}</div>
+          <div class="activity-name">${a.name}</div>
+        </div>`).join('');
+
+      return `
+        <div class="entry-card morning">
+          <div class="card-type morning">
+            🌅 Morning
+            ${data.wakeTime ? `<span class="time-badge">⏰ ${data.wakeTime}</span>` : ''}
+          </div>
+          
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-label">Sleep</div>
+              <div class="metric-value">${data.sleep !== null ? data.sleep + '/10' : '--'}</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Mood</div>
+              <div class="metric-value">${data.mood !== null ? data.mood + '/10' : '--'}</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Pain</div>
+              <div class="metric-value">${data.pain !== null ? data.pain + '/10' : '--'}</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Anxiety</div>
+              <div class="metric-value">${data.anxiety !== null ? data.anxiety + '/10' : '--'}</div>
+            </div>
+          </div>
+          
+          ${data.wakeMode ? `
+            <div class="mode-badge">
+              <h4>🧠 Wake Mode</h4>
+              <div class="mode-value">${data.wakeMode}</div>
+            </div>
+          ` : ''}
+          
+          <div class="activities">
+            <div class="section-title">
+              Activities 
+              <span class="completion-summary">${completedCount}/${morningActivities.length}</span>
+            </div>
+            <div class="activities-grid">${activitiesHtml}</div>
+          </div>
+          
+          ${data.dailyGoal ? `
+            <div class="text-entry">
+              <h4>🎯 Daily Goal</h4>
+              <div class="text-content">${data.dailyGoal}</div>
+            </div>
+          ` : ''}
+          
+          ${data.reflections ? `
+            <div class="text-entry">
+              <h4>💭 Reflections</h4>
+              <div class="text-content">${data.reflections}</div>
+            </div>
+          ` : ''}
+        </div>`;
+    }
+
+    function renderEveningCard(data){
+      if (!data){
+        return `
+          <div class="entry-card evening missing">
+            <div class="card-type evening">🌙 Evening</div>
+            <div class="missing-text">No evening entry logged</div>
+          </div>`;
+      }
+
+      const eveningActivities = [
+        { key: 'evening-walk', name: 'Walk', icon: '🚶‍♀️' },
+        { key: 'meditation', name: 'Meditation', icon: '🧘‍♀️' },
+        { key: 'reading', name: 'Reading', icon: '📚' },
+        { key: 'journaling', name: 'Journaling', icon: '📝' },
+        { key: 'stretching', name: 'Stretching', icon: '🤸‍♀️' },
+        { key: 'tea', name: 'Tea', icon: '🍵' },
+        { key: 'skincare', name: 'Skincare', icon: '✨' },
+        { key: 'tidy', name: 'Tidy', icon: '🧹' }
+      ];
+
+      const completedCount = eveningActivities.filter(a => data.activities[a.key]).length;
+      const activitiesHtml = eveningActivities.map(a => `
+        <div class="activity-item ${data.activities[a.key] ? 'completed' : ''}">
+          <div class="activity-icon">${a.icon}</div>
+          <div class="activity-name">${a.name}</div>
+        </div>`).join('');
+
+      return `
+        <div class="entry-card evening">
+          <div class="card-type evening">
+            🌙 Evening
+            ${data.bedTime ? `<span class="time-badge">🛏️ ${data.bedTime}</span>` : ''}
+          </div>
+          
+          <div class="metrics">
+            <div class="metric">
+              <div class="metric-label">Energy</div>
+              <div class="metric-value">${data.energy !== null ? data.energy + '/10' : '--'}</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Mood</div>
+              <div class="metric-value">${data.mood !== null ? data.mood + '/10' : '--'}</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Product.</div>
+              <div class="metric-value">${data.productivity !== null ? data.productivity + '/10' : '--'}</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Stress</div>
+              <div class="metric-value">${data.stress !== null ? data.stress + '/10' : '--'}</div>
+            </div>
+          </div>
+          
+          ${data.bedMode ? `
+            <div class="mode-badge">
+              <h4>😴 Bed Feeling</h4>
+              <div class="mode-value">${data.bedMode}</div>
+            </div>
+          ` : ''}
+          
+          <div class="activities">
+            <div class="section-title">
+              Activities 
+              <span class="completion-summary">${completedCount}/${eveningActivities.length}</span>
+            </div>
+            <div class="activities-grid">${activitiesHtml}</div>
+          </div>
+          
+          ${data.dailyWin ? `
+            <div class="text-entry">
+              <h4>🎯 Biggest Win</h4>
+              <div class="text-content">${data.dailyWin}</div>
+            </div>
+          ` : ''}
+          
+          ${data.gratitude ? `
+            <div class="text-entry">
+              <h4>🙏 Gratitude</h4>
+              <div class="text-content">${data.gratitude}</div>
+            </div>
+          ` : ''}
+          
+          ${data.reflections ? `
+            <div class="text-entry">
+              <h4>💭 Reflections</h4>
+              <div class="text-content">${data.reflections}</div>
+            </div>
+          ` : ''}
+          
+          ${data.tomorrowPriority ? `
+            <div class="text-entry">
+              <h4>➡️ Tomorrow</h4>
+              <div class="text-content">${data.tomorrowPriority}</div>
+            </div>
+          ` : ''}
+        </div>`;
+    }
+
+    function showNoData(){
+      const c = document.getElementById('entries-container');
+      c.innerHTML = `
+        <div class="no-data">
+          <h3>No tracker data found</h3>
+          <p>No morning or evening data found in your Watershed LRS for the last 20 days.</p>
+          <p>Check the browser console for any error messages.</p>
+        </div>`;
+    }
+  </script>
+</body>
+</html>
