@@ -90,8 +90,8 @@
 
     // ===================== LRS fetch =====================
     async function fetchMorningRoutineStatements(){
-      const base = 'https://watershedlrs.com/api/organizations/27602/lrs/statements';
-      const auth = 'Basic ' + btoa('265a830db386f1:e6134635058c88');
+      const base = '[endpoint]';
+      const auth = 'Basic ' + btoa('username:password');
       
       // Fetch statements for morning routine activity specifically
       let url = base + '/statements?activity=http://patriciastitson.com/activities/morning-routine&limit=50';
@@ -201,26 +201,26 @@
           
           // Extract metrics
           if (ext['http://patriciastitson.com/extensions/wake-time']) {
-            entry.wakeTime = ext['http://patriciastitson.com/extensions/wake-time'];
+            entry.wakeTime = ext['http://yourdomain.com/extensions/wake-time'];
           }
           if (ext['http://patriciastitson.com/extensions/sleep']) {
-            entry.sleep = parseInt(ext['http://patriciastitson.com/extensions/sleep']);
+            entry.sleep = parseInt(ext['http://yourdomain.com/extensions/sleep']);
           }
           if (ext['http://patriciastitson.com/extensions/mood']) {
-            entry.mood = parseInt(ext['http://patriciastitson.com/extensions/mood']);
+            entry.mood = parseInt(ext['http://yourdomain.com/extensions/mood']);
           }
           if (ext['http://patriciastitson.com/extensions/pain']) {
-            entry.painLevel = parseInt(ext['http://patriciastitson.com/extensions/pain']);
+            entry.painLevel = parseInt(ext['http://yourdomain.com/extensions/pain']);
           }
           if (ext['http://patriciastitson.com/extensions/anxiety']) {
-            entry.anxietyLevel = parseInt(ext['http://patriciastitson.com/extensions/anxiety']);
+            entry.anxietyLevel = parseInt(ext['http://yourdomain.com/extensions/anxiety']);
           }
           if (ext['http://patriciastitson.com/extensions/wake-mode']) {
-            entry.wakeMode = ext['http://patriciastitson.com/extensions/wake-mode'];
+            entry.wakeMode = ext['http://yourdomain.com/extensions/wake-mode'];
           }
           
           // Extract activities array
-          if (ext['http://patriciastitson.com/extensions/activities'] && Array.isArray(ext['http://patriciastitson.com/extensions/activities'])) {
+          if (ext['http://yourdomain.com/extensions/activities'] && Array.isArray(ext['http://yourdomain.com/extensions/activities'])) {
             const activities = ext['http://patriciastitson.com/extensions/activities'];
             entry.meditation = activities.includes('meditation');
             entry.exercise = activities.includes('exercise');
@@ -234,10 +234,10 @@
           
           // Extract text fields
           if (ext['http://patriciastitson.com/extensions/goals']) {
-            entry.dailyGoal = ext['http://patriciastitson.com/extensions/goals'];
+            entry.dailyGoal = ext['http://yourdomain.com/extensions/goals'];
           }
           if (ext['http://patriciastitson.com/extensions/reflections']) {
-            entry.reflections = ext['http://patriciastitson.com/extensions/reflections'];
+            entry.reflections = ext['http://yourdomain.com/extensions/reflections'];
           }
         }
       }
