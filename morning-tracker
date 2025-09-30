@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Morning Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: linear-gradient(to bottom right, #fff7ed, #fef3c7); }
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #ea580c; font-size: 2.5em; margin: 10px 0; }
+        .section { margin: 20px 0; padding: 15px; border-left: 4px solid #fb923c; background: #fef3c7; border-radius: 5px; }
+        .activity-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 15px 0; }
+        .activity { padding: 15px; border: 2px solid #d1d5db; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s; }
+        .activity.completed { border-color: #22c55e; background: #dcfce7; color: #166534; }
+        .activity:hover { border-color: #fb923c; }
+        .slider-container { margin: 15px 0; }
+        .slider { width: 100%; height: 8px; border-radius: 5px; background: #e5e7eb; outline: none; }
+        .form-group { margin: 15px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #374151; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 2px solid #d1d5db; border-radius: 8px; font-size: 16px; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #fb923c; outline: none; }
+        .submit-btn { background: linear-gradient(to right, #ea580c, #f59e0b); color: white; padding: 15px 30px; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .lrs-status { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; padding: 5px 10px; border-radius: 15px; font-size: 14px; }
+        .lrs-status.connected { background: #dcfce7; color: #166534; }
+        .lrs-status.disconnected { background: #fef2f2; color: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌅 Morning Tracker</h1>
+            <p>Track your morning routine and start your day mindfully</p>
+            <div id="lrs-status" class="lrs-status disconnected">⚠️ LRS Status</div>
+        </div>
+
+        <!-- Date and Wake Time -->
+        <div class="section">
+            <div class="form-group">
+                <label>📅 Date:</label>
+                <input type="date" id="tracking-date" />
+            </div>
+            <div class="form-group">
+                <label>⏰ Wake Up Time:</label>
+                <input type="time" id="wake-time" />
+            </div>
+        </div>
+
+        <!-- Rating Sliders -->
+        <div class="section">
+            <div class="slider-container">
+                <label>😴 Sleep Quality: <span id="sleep-value">5</span>/10</label>
+                <input type="range" class="slider" id="sleep" min="1" max="10" value="5" />
+            </div>
+            <div class="slider-container">
+                <label>😊 Morning Mood: <span id="mood-value">5</span>/10</label>
+                <input type="range" class="slider" id="mood" min="1" max="10" value="5" />
+            </div>
+            <div class="slider-container">
+                <label>🩹 Pain Level: <span id="pain-value">5</span>/10</label>
+                <input type="range" class="slider" id="pain" min="1" max="10" value="5" />
+            </div>
+            <div class="slider-container">
+                <label>😰 Anxiety Level: <span id="anxiety-value">5</span>/10</label>
+                <input type="range" class="slider" id="anxiety" min="1" max="10" value="5" />
+            </div>
+        </div>
+
+        <!-- Activities -->
+        <div class="section">
+            <h3>✅ Morning Activities</h3>
+            <div class="activity-grid">
+                <div class="activity" data-activity="meditation">🧘‍♀️<br>Meditation</div>
+                <div class="activity" data-activity="exercise">💪<br>Exercise</div>
+                <div class="activity" data-activity="journaling">📝<br>Journaling</div>
+                <div class="activity" data-activity="reading">📚<br>Reading</div>
+                <div class="activity" data-activity="breakfast">🥗<br>Healthy Breakfast</div>
+                <div class="activity" data-activity="hydration">💧<br>Hydration</div>
+                <div class="activity" data-activity="planning">📋<br>Day Planning</div>
+                <div class="activity" data-activity="vitamins">💊<br>Vitamins</div>
+            </div>
+            <div id="completion-status" style="text-align: center; margin-top: 15px; font-weight: bold;"></div>
+        </div>
+
+        <!-- Goals and Reflections -->
+        <div class="section">
+            <div class="form-group">
+                <label>🎯 Today's Main Goal:</label>
+                <input type="text" id="daily-goal" placeholder="What's your main focus today?" />
+            </div>
+            <div class="form-group">
+                <label>🤔 Morning Reflections:</label>
+                <textarea id="reflections" rows="4" placeholder="How are you feeling? What are you grateful for?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>🧠 Wake Up Mode:</label>
+                <select id="wake-mode">
+                    <option value="creative">Creative</option>
+                    <option value="quiet">Quiet</option>
+                    <option value="overwhelmed">Overwhelmed</option>
+                    <option value="grounded">Grounded</option>
+                    <option value="curious">Curious</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="submit-btn" onclick="submitTracking()">🌅 Track My Morning!</button>
+
+        <div id="recent-entries" style="margin-top: 30px;"></div>
+    </div>
+
+    <script>
+        // Password Protection
+        const correctPassword = "[your password]"; // Change this to your preferred password
+        const userPassword = prompt("🔐 Enter password to access Morning Tracker:");
+        if (userPassword !== correctPassword) {
+            document.body.innerHTML = `
+                <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+                    <h1 style="color: #dc2626;">🚫 Access Denied</h1>
+                    <p style="color: #666;">Invalid password. Please contact the administrator.</p>
+                </div>`;
+            throw new Error("Unauthorized access");
+        }
+
+        // Pre-configured LRS settings for patriciastitson.com
+        const defaultLRSConfig = {
+            endpoint: '',
+            username: '',
+            password: '',
+            enabled: true
+        };
+
+        // Initialize date to today
+        document.getElementById('tracking-date').value = new Date().toISOString().split('T')[0];
+
+        // Update completion status
+        function updateCompletionStatus() {
+            const completedEl = document.querySelectorAll('.activity.completed');
+            const totalEl = document.querySelectorAll('.activity');
+            const statusEl = document.getElementById('completion-status');
+            
+            if (!statusEl) return;
+            
+            const completed = completedEl.length;
+            const total = totalEl.length;
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+            statusEl.textContent = `Completed: ${completed}/${total} (${percentage}%)`;
+        }
+
+        // Update LRS status
+        function updateLRSStatus() {
+            const statusEl = document.getElementById('lrs-status');
+            if (!statusEl) return;
+            
+            if (defaultLRSConfig.enabled && defaultLRSConfig.endpoint && defaultLRSConfig.username && defaultLRSConfig.password) {
+                statusEl.className = 'lrs-status connected';
+                statusEl.innerHTML = '✅ LRS Connected';
+            } else {
+                statusEl.className = 'lrs-status disconnected';
+                statusEl.innerHTML = '⚠️ LRS Not Connected';
+            }
+        }
+
+        // Generate xAPI statement
+        function generateXAPIStatement() {
+            const activities = {};
+            document.querySelectorAll('.activity').forEach(el => {
+                const activityName = el.dataset.activity;
+                activities[activityName] = el.classList.contains('completed');
+            });
+            function buildTimestampFromInputs() {
+  const dateStr = document.getElementById('tracking-date').value; // YYYY-MM-DD
+  const timeStr = document.getElementById('wake-time').value || '07:00'; // HH:MM fallback
+  if (!dateStr) return new Date().toISOString(); // safety
+
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const [hh, mm] = timeStr.split(':').map(Number);
+  // Create a LOCAL Date using the user's inputs, then convert to ISO
+  const dt = new Date(y, m - 1, d, hh || 0, mm || 0, 0, 0);
+  return dt.toISOString();
+}
+
+
+            const completedActivities = Object.entries(activities)
+                .filter(([_, completed]) => completed)
+                .map(([activity, _]) => activity);
+
+            return {
+                actor: {
+                    name: "Patricia Stitson",
+                    mbox: "mailto:patricia@patriciastitson.com"
+                },
+                verb: {
+                    id: "http://adlnet.gov/expapi/verbs/completed",
+                    display: { "en-US": "completed" }
+                },
+                object: {
+                    id: "http://patriciastitson.com/activities/morning-routine",
+                    definition: {
+                        name: { "en-US": "Morning Routine Tracking" },
+                        description: { "en-US": "Daily morning routine completion tracking" }
+                    }
+                },
+                result: {
+                    completion: true,
+                    score: {
+                        scaled: completedActivities.length / Object.keys(activities).length
+                    },
+                    extensions: {
+                        "http://patriciastitson.com/extensions/wake-time": document.getElementById('wake-time').value,
+                        "http://patriciastitson.com/extensions/sleep": parseInt(document.getElementById('sleep').value),
+                        "http://patriciastitson.com/extensions/mood": parseInt(document.getElementById('mood').value),
+                        "http://patriciastitson.com/extensions/pain": parseInt(document.getElementById('pain').value),
+                        "http://patriciastitson.com/extensions/anxiety": parseInt(document.getElementById('anxiety').value),
+                        "http://patriciastitson.com/extensions/activities": completedActivities,
+                        "http://patriciastitson.com/extensions/goals": document.getElementById('daily-goal').value,
+                        "http://patriciastitson.com/extensions/reflections": document.getElementById('reflections').value,
+                        "http://patriciastitson.com/extensions/wake-mode": document.getElementById('wake-mode').value
+                    }
+                },
+                timestamp: buildTimestampFromInputs()
+
+            };
+        }
+
+        // Send to LRS
+        async function sendToLRS(xapiStatement) {
+            try {
+                const response = await fetch(`${defaultLRSConfig.endpoint}/statements`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Basic ${btoa(`${defaultLRSConfig.username}:${defaultLRSConfig.password}`)}`,
+                        'Content-Type': 'application/json',
+                        'X-Experience-API-Version': '1.0.3'
+                    },
+                    body: JSON.stringify(xapiStatement)
+                });
+
+                if (response.ok) {
+                    return { success: true, message: 'Successfully sent to LRS' };
+                } else {
+                    return { success: false, message: `LRS Error: ${response.status}` };
+                }
+            } catch (error) {
+                return { success: false, message: `Network Error: ${error.message}` };
+            }
+        }
+
+        // Submit tracking data
+        async function submitTracking() {
+            const xapiStatement = generateXAPIStatement();
+            const submission = {
+                date: document.getElementById('tracking-date').value,
+                timestamp: new Date().toISOString(),
+                xapiStatement: xapiStatement,
+                lrsSent: false
+            };
+
+            // Try to send to LRS
+            const lrsResult = await sendToLRS(xapiStatement);
+            if (lrsResult.success) {
+                submission.lrsSent = true;
+                alert('✅ Morning routine tracked and sent to LRS!');
+            } else {
+                alert(`📝 Morning routine tracked locally! ${lrsResult.message}`);
+            }
+
+            // Save submission
+            const submissions = JSON.parse(localStorage.getItem('submissions') || '[]');
+            submissions.push(submission);
+            localStorage.setItem('submissions', JSON.stringify(submissions));
+
+            console.log('xAPI Statement:', JSON.stringify(xapiStatement, null, 2));
+            
+            // Reset form
+            resetForm();
+            displayRecentEntries();
+        }
+
+        // Reset form
+        function resetForm() {
+            document.querySelectorAll('.activity').forEach(el => el.classList.remove('completed'));
+            document.getElementById('wake-time').value = '';
+            document.getElementById('daily-goal').value = '';
+            document.getElementById('reflections').value = '';
+            ['sleep', 'mood', 'pain', 'anxiety'].forEach(id => {
+                document.getElementById(id).value = 5;
+                document.getElementById(id + '-value').textContent = '5';
+            });
+            updateCompletionStatus();
+        }
+
+        // Display recent entries
+        function displayRecentEntries() {
+            const submissions = JSON.parse(localStorage.getItem('submissions') || '[]');
+            const recent = submissions.slice(-5).reverse();
+            
+            if (recent.length > 0) {
+                const html = `
+                    <h3>Recent Entries</h3>
+                    ${recent.map(sub => `
+                        <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid ${sub.lrsSent ? '#22c55e' : '#f59e0b'};">
+                            <strong>${sub.date}</strong> 
+                            <span style="color: ${sub.lrsSent ? '#22c55e' : '#f59e0b'};">
+                                ${sub.lrsSent ? '✅ Sent to LRS' : '📝 Local Only'}
+                            </span>
+                        </div>
+                    `).join('')}
+                `;
+                document.getElementById('recent-entries').innerHTML = html;
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up activity click handlers
+            document.querySelectorAll('.activity').forEach(activity => {
+                activity.addEventListener('click', () => {
+                    activity.classList.toggle('completed');
+                    updateCompletionStatus();
+                });
+            });
+
+            // Set up slider value updates
+            ['sleep', 'mood', 'pain', 'anxiety'].forEach(id => {
+                const slider = document.getElementById(id);
+                const valueSpan = document.getElementById(id + '-value');
+                if (slider && valueSpan) {
+                    slider.addEventListener('input', () => {
+                        valueSpan.textContent = slider.value;
+                    });
+                }
+            });
+
+            // Initialize status displays
+            updateLRSStatus();
+            updateCompletionStatus();
+            displayRecentEntries();
+        });
+    </script>
+</body>
+</html>
