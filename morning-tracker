@@ -186,8 +186,8 @@
 
             return {
                 actor: {
-                    name: "Patricia Stitson",
-                    mbox: "mailto:patricia@patriciastitson.com"
+                    name: "[name]",
+                    mbox: "mailto:[your email]"
                 },
                 verb: {
                     id: "http://adlnet.gov/expapi/verbs/completed",
