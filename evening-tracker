@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Evening Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: linear-gradient(to bottom right, #1e1b4b, #312e81); }
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h1 { color: #4338ca; font-size: 2.5em; margin: 10px 0; }
+        .section { margin: 20px 0; padding: 15px; border-left: 4px solid #6366f1; background: #eef2ff; border-radius: 5px; }
+        .activity-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 15px 0; }
+        .activity { padding: 15px; border: 2px solid #d1d5db; border-radius: 10px; text-align: center; cursor: pointer; transition: all 0.3s; }
+        .activity.completed { border-color: #6366f1; background: #ddd6fe; color: #4338ca; }
+        .activity:hover { border-color: #818cf8; }
+        .slider-container { margin: 15px 0; }
+        .slider { width: 100%; height: 8px; border-radius: 5px; background: #e5e7eb; outline: none; }
+        .form-group { margin: 15px 0; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #374151; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 2px solid #d1d5db; border-radius: 8px; font-size: 16px; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #6366f1; outline: none; }
+        .submit-btn { background: linear-gradient(to right, #4338ca, #6366f1); color: white; padding: 15px 30px; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .lrs-status { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; padding: 5px 10px; border-radius: 15px; font-size: 14px; }
+        .lrs-status.connected { background: #dcfce7; color: #166534; }
+        .lrs-status.disconnected { background: #fef2f2; color: #dc2626; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌙 Evening Tracker</h1>
+            <p>Reflect on your day and prepare for restful sleep</p>
+            <div id="lrs-status" class="lrs-status disconnected">⚠️ LRS Status</div>
+        </div>
+
+        <!-- Date and Bedtime -->
+        <div class="section">
+            <div class="form-group">
+                <label>📅 Date:</label>
+                <input type="date" id="tracking-date" />
+            </div>
+            <div class="form-group">
+                <label>🛏️ Bedtime:</label>
+                <input type="time" id="bed-time" />
+            </div>
+        </div>
+
+        <!-- Rating Sliders -->
+        <div class="section">
+            <div class="slider-container">
+                <label>💪 Energy Level Today: <span id="energy-value">5</span>/10</label>
+                <input type="range" class="slider" id="energy" min="1" max="10" value="5" />
+            </div>
+            <div class="slider-container">
+                <label>😊 Overall Mood: <span id="mood-value">5</span>/10</label>
+                <input type="range" class="slider" id="mood" min="1" max="10" value="5" />
+            </div>
+            <div class="slider-container">
+                <label>✅ Productivity: <span id="productivity-value">5</span>/10</label>
+                <input type="range" class="slider" id="productivity" min="1" max="10" value="5" />
+            </div>
+            <div class="slider-container">
+                <label>😰 Stress Level: <span id="stress-value">5</span>/10</label>
+                <input type="range" class="slider" id="stress" min="1" max="10" value="5" />
+            </div>
+        </div>
+
+        <!-- Activities -->
+        <div class="section">
+            <h3>✅ Evening Wind-Down Activities</h3>
+            <div class="activity-grid">
+                <div class="activity" data-activity="evening-walk">🚶‍♀️<br>Evening Walk</div>
+                <div class="activity" data-activity="meditation">🧘‍♀️<br>Meditation</div>
+                <div class="activity" data-activity="reading">📚<br>Reading</div>
+                <div class="activity" data-activity="journaling">📝<br>Journaling</div>
+                <div class="activity" data-activity="stretching">🤸‍♀️<br>Stretching</div>
+                <div class="activity" data-activity="tea">🍵<br>Herbal Tea</div>
+                <div class="activity" data-activity="skincare">✨<br>Skincare</div>
+                <div class="activity" data-activity="tidy">🧹<br>Tidy Space</div>
+            </div>
+            <div id="completion-status" style="text-align: center; margin-top: 15px; font-weight: bold;"></div>
+        </div>
+
+        <!-- Reflections -->
+        <div class="section">
+            <div class="form-group">
+                <label>🎯 Biggest Win Today:</label>
+                <input type="text" id="daily-win" placeholder="What went well today?" />
+            </div>
+            <div class="form-group">
+                <label>🙏 Gratitude:</label>
+                <textarea id="gratitude" rows="3" placeholder="What are you grateful for today?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>📝 Evening Reflections:</label>
+                <textarea id="reflections" rows="4" placeholder="How was your day? What did you learn?"></textarea>
+            </div>
+            <div class="form-group">
+                <label>💭 Tomorrow's Priority:</label>
+                <input type="text" id="tomorrow-priority" placeholder="What's most important tomorrow?" />
+            </div>
+            <div class="form-group">
+                <label>😴 Feeling Going to Bed:</label>
+                <select id="bed-mode">
+                    <option value="peaceful">Peaceful</option>
+                    <option value="restless">Restless</option>
+                    <option value="anxious">Anxious</option>
+                    <option value="content">Content</option>
+                    <option value="exhausted">Exhausted</option>
+                    <option value="wired">Wired</option>
+                </select>
+            </div>
+        </div>
+
+        <button class="submit-btn" onclick="submitTracking()">🌙 Track My Evening!</button>
+
+        <div id="recent-entries" style="margin-top: 30px;"></div>
+    </div>
+
+    <script>
+        // Password Protection
+        const correctPassword = "[Choose Password]";
+        const userPassword = prompt("🔐 Enter password to access Evening Tracker:");
+        if (userPassword !== correctPassword) {
+            document.body.innerHTML = `
+                <div style="text-align: center; padding: 50px; font-family: Arial, sans-serif;">
+                    <h1 style="color: #dc2626;">🚫 Access Denied</h1>
+                    <p style="color: #666;">Invalid password. Please contact the administrator.</p>
+                </div>`;
+            throw new Error("Unauthorized access");
+        }
+
+        // Pre-configured LRS settings
+        const defaultLRSConfig = {
+            endpoint: '',
+            username: '',
+            password: '',
+            enabled: true
+        };
+
+        // Initialize date to today
+        document.getElementById('tracking-date').value = new Date().toISOString().split('T')[0];
+
+        // Update completion status
+        function updateCompletionStatus() {
+            const completedEl = document.querySelectorAll('.activity.completed');
+            const totalEl = document.querySelectorAll('.activity');
+            const statusEl = document.getElementById('completion-status');
+            
+            if (!statusEl) return;
+            
+            const completed = completedEl.length;
+            const total = totalEl.length;
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+            statusEl.textContent = `Completed: ${completed}/${total} (${percentage}%)`;
+        }
+
+        // Update LRS status
+        function updateLRSStatus() {
+            const statusEl = document.getElementById('lrs-status');
+            if (!statusEl) return;
+            
+            if (defaultLRSConfig.enabled && defaultLRSConfig.endpoint && defaultLRSConfig.username && defaultLRSConfig.password) {
+                statusEl.className = 'lrs-status connected';
+                statusEl.innerHTML = '✅ LRS Connected';
+            } else {
+                statusEl.className = 'lrs-status disconnected';
+                statusEl.innerHTML = '⚠️ LRS Not Connected';
+            }
+        }
+
+        // Generate xAPI statement
+        function generateXAPIStatement() {
+            const activities = {};
+            document.querySelectorAll('.activity').forEach(el => {
+                const activityName = el.dataset.activity;
+                activities[activityName] = el.classList.contains('completed');
+            });
+            
+            function buildTimestampFromInputs() {
+                const dateStr = document.getElementById('tracking-date').value;
+                const timeStr = document.getElementById('bed-time').value || '22:00';
+                if (!dateStr) return new Date().toISOString();
+
+                const [y, m, d] = dateStr.split('-').map(Number);
+                const [hh, mm] = timeStr.split(':').map(Number);
+                const dt = new Date(y, m - 1, d, hh || 0, mm || 0, 0, 0);
+                return dt.toISOString();
+            }
+
+            const completedActivities = Object.entries(activities)
+                .filter(([_, completed]) => completed)
+                .map(([activity, _]) => activity);
+
+            return {
+                actor: {
+                    name: "",
+                    mbox: ""
+                },
+                verb: {
+                    id: "http://adlnet.gov/expapi/verbs/completed",
+                    display: { "en-US": "completed" }
+                },
+                object: {
+                    id: "",
+                    definition: {
+                        name: { "en-US": "Evening Routine Tracking" },
+                        description: { "en-US": "Daily evening routine and reflection tracking" }
+                    }
+                },
+                result: {
+                    completion: true,
+                    score: {
+                        scaled: completedActivities.length / Object.keys(activities).length
+                    },
+                    extensions: {
+                        "http://yourdomain.com/extensions/bed-time": document.getElementById('bed-time').value,
+                        "http://yourdomain.com/extensions/energy": parseInt(document.getElementById('energy').value),
+                        "http://yourdomain.com/extensions/mood": parseInt(document.getElementById('mood').value),
+                        "http://yourdomain.com/extensions/productivity": parseInt(document.getElementById('productivity').value),
+                        "http://yourdomain.com/extensions/stress": parseInt(document.getElementById('stress').value),
+                        "http://yourdomain.com/extensions/activities": completedActivities,
+                        "http://yourdomain.com/extensions/daily-win": document.getElementById('daily-win').value,
+                        "http://yourdomain.com/extensions/gratitude": document.getElementById('gratitude').value,
+                        "http://yourdomain.com/extensions/reflections": document.getElementById('reflections').value,
+                        "http://yourdomain.com/extensions/tomorrow-priority": document.getElementById('tomorrow-priority').value,
+                        "http://yourdomain.com/extensions/bed-mode": document.getElementById('bed-mode').value
+                    }
+                },
+                timestamp: buildTimestampFromInputs()
+            };
+        }
+
+        // Send to LRS
+        async function sendToLRS(xapiStatement) {
+            try {
+                const response = await fetch(`${defaultLRSConfig.endpoint}/statements`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Basic ${btoa(`${defaultLRSConfig.username}:${defaultLRSConfig.password}`)}`,
+                        'Content-Type': 'application/json',
+                        'X-Experience-API-Version': '1.0.3'
+                    },
+                    body: JSON.stringify(xapiStatement)
+                });
+
+                if (response.ok) {
+                    return { success: true, message: 'Successfully sent to LRS' };
+                } else {
+                    return { success: false, message: `LRS Error: ${response.status}` };
+                }
+            } catch (error) {
+                return { success: false, message: `Network Error: ${error.message}` };
+            }
+        }
+
+        // Submit tracking data
+        async function submitTracking() {
+            const xapiStatement = generateXAPIStatement();
+            const submission = {
+                date: document.getElementById('tracking-date').value,
+                timestamp: new Date().toISOString(),
+                xapiStatement: xapiStatement,
+                lrsSent: false
+            };
+
+            // Try to send to LRS
+            const lrsResult = await sendToLRS(xapiStatement);
+            if (lrsResult.success) {
+                submission.lrsSent = true;
+                alert('✅ Evening routine tracked and sent to LRS!');
+            } else {
+                alert(`📝 Evening routine tracked locally! ${lrsResult.message}`);
+            }
+
+            // Save submission using separate key from morning tracker
+            const submissions = JSON.parse(localStorage.getItem('evening-submissions') || '[]');
+            submissions.push(submission);
+            localStorage.setItem('evening-submissions', JSON.stringify(submissions));
+
+            console.log('xAPI Statement:', JSON.stringify(xapiStatement, null, 2));
+            
+            // Reset form
+            resetForm();
+            displayRecentEntries();
+        }
+
+        // Reset form
+        function resetForm() {
+            document.querySelectorAll('.activity').forEach(el => el.classList.remove('completed'));
+            document.getElementById('bed-time').value = '';
+            document.getElementById('daily-win').value = '';
+            document.getElementById('gratitude').value = '';
+            document.getElementById('reflections').value = '';
+            document.getElementById('tomorrow-priority').value = '';
+            ['energy', 'mood', 'productivity', 'stress'].forEach(id => {
+                document.getElementById(id).value = 5;
+                document.getElementById(id + '-value').textContent = '5';
+            });
+            updateCompletionStatus();
+        }
+
+        // Display recent entries
+        function displayRecentEntries() {
+            const submissions = JSON.parse(localStorage.getItem('evening-submissions') || '[]');
+            const recent = submissions.slice(-5).reverse();
+            
+            if (recent.length > 0) {
+                const html = `
+                    <h3>Recent Entries</h3>
+                    ${recent.map(sub => `
+                        <div style="background: white; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid ${sub.lrsSent ? '#6366f1' : '#f59e0b'};">
+                            <strong>${sub.date}</strong> 
+                            <span style="color: ${sub.lrsSent ? '#6366f1' : '#f59e0b'};">
+                                ${sub.lrsSent ? '✅ Sent to LRS' : '📝 Local Only'}
+                            </span>
+                        </div>
+                    `).join('')}
+                `;
+                document.getElementById('recent-entries').innerHTML = html;
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up activity click handlers
+            document.querySelectorAll('.activity').forEach(activity => {
+                activity.addEventListener('click', () => {
+                    activity.classList.toggle('completed');
+                    updateCompletionStatus();
+                });
+            });
+
+            // Set up slider value updates
+            ['energy', 'mood', 'productivity', 'stress'].forEach(id => {
+                const slider = document.getElementById(id);
+                const valueSpan = document.getElementById(id + '-value');
+                if (slider && valueSpan) {
+                    slider.addEventListener('input', () => {
+                        valueSpan.textContent = slider.value;
+                    });
+                }
+            });
+
+            // Initialize status displays
+            updateLRSStatus();
+            updateCompletionStatus();
+            displayRecentEntries();
+        });
+    </script>
+</body>
+</html>
